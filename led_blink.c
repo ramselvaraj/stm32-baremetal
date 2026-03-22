@@ -1,5 +1,10 @@
 #include <stdint.h>
 
+/*
+ * blink LED 'LD2'
+ */
+
+
 #define RCC_BASE 0x40023800UL
 #define GPIOA_BASE  0x40020000UL
 
@@ -7,12 +12,21 @@
 #define GPIOx_MODER *(volatile uint32_t*)(GPIOA_BASE + 0x00) //gpioA mode register
 #define GPIOx_ODR *(volatile uint32_t*)(GPIOA_BASE + 0x14) //gpioA output data register
 
+static void delay(volatile uint32_t count)
+{
+    while (count--) //count will be a CPU clock
+    {
+        __asm volatile ("nop"); //inject raw assembly, nop instruction
+    }
+}
+
 int main(void)
 {
 
     //enable RCC AHB1 GPIOA clock register
     RCC_AHB1ENR |= (1U << 0); //basically a 32 bit mask, so only the first bit gets enabled to 1 no matter what it's original value was
 
+    //configure PA5 as an output register
     GPIOx_MODER &= ~(3U << (5*2));
     GPIOx_MODER |= (1U << (5*2));
     /*
@@ -23,8 +37,16 @@ int main(void)
      * we can now safely use the 32bit mask of 01 shifted 10 positions to set the bits we actually want with the OR operation.
      * */
 
-    //write the 5th position of ODR of GPIOA
-    GPIOx_ODR |= (1U << 5);
+    for (int i = 0; i < 311; ++i)
+    {
+        // Turn LED ON (set bit 5)
+        GPIOx_ODR |=  (1U << 5);
+        delay(4000000);   // adjusted for 16 MHz clock of F446RE
+
+        // Turn LED OFF (clear bit 5)
+        GPIOx_ODR &= ~(1U << 5);
+        delay(4000000);   // adjusted for 16 MHz clock of F446RE
+    }
 
 
     /* Loop forever */
