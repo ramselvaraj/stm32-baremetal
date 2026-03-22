@@ -27,7 +27,7 @@ static uint16_t calculate_baud_rate(uint32_t PeripheralCLK, uint32_t BaudRate){
 }
 
 void usart_send_char(int ch){
-    while (!(USART2->SR) & USART2_SR_TXE){
+    while (!(USART2->SR & USART2_SR_TXE)){
         //will wait till DR is clear
     }
     USART2->DR = (ch & 0xFF);
